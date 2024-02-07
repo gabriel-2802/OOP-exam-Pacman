@@ -207,10 +207,12 @@ class BlueGhost extends Ghost {
     }
 }
 
+@FunctionalInterface
 interface GameReader {
     void readGame(GameBoard game) throws Exception;
 }
 
+@FunctionalInterface
 interface GamePrinter {
     void printGame(GameBoard game);
 
@@ -275,13 +277,6 @@ Se cere ca la finalul simularii (dupa M pasi sau cand PacMan moare, daca e cazul
 - pozitia lui PacMan
 - pentru fiecare din fantome, pe cate un rand, un indicator al culorii si pozitia (B X Y pentru albastre, respectiv R X Y pentru rosii), in ordinea apropierii de marginea stanga a tablei; daca doua fantome sunt pe aceeasi coloana, se vor afisa in ordinea apropierii de marginea de sus a tablei; daca doua fantome sunt pe aceeasi pozitie, se vor afisa intai cele albastre (B) apoi cele rosii (R).
  */
-class GPrinter implements GamePrinter {
-    @Override
-    public void printGame(GameBoard game) {
-        System.out.println(game.getPackMan());
-        game.getGhosts().stream().sorted().forEach(System.out::println);
-    }
-}
 
 class GameBoard {
     private int boardSize;
@@ -342,8 +337,7 @@ public class Main {
     public static void main(String[] args) {
 
        GameBoard game = new GameBoard();
-       GameReader reader = new GReader();
-       GamePrinter printer = new GPrinter();
+         GameReader reader = new GReader();
 
        try {
            reader.readGame(game);
@@ -353,6 +347,12 @@ public class Main {
        }
 
        game.play();
-       printer.printGame(game);
+       new GamePrinter() {
+           @Override
+           public void printGame(GameBoard game) {
+               System.out.println(game.getPackMan());
+               game.getGhosts().stream().sorted().forEach(System.out::println);
+           }
+       }.printGame(game);
     }
 }
