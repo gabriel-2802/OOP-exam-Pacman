@@ -1,4 +1,7 @@
+import javax.swing.text.Position;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 interface Character {
     void move();
@@ -54,10 +57,28 @@ class Coordinate {
 class PackMan extends GameEntity {
     List <java.lang.Character> path = new LinkedList<>();
     private final int maxDistance;
+    private PositionUpdater positionUpdater;
+
+    //Internal class to update the position of the packman
+    class PositionUpdater {
+        private Map<java.lang.Character, Consumer<Coordinate>> actions = new HashMap<>();
+
+        public PositionUpdater(int maxDistance) {
+            actions.put('U', p -> p.setY(p.getY() == maxDistance ? p.getY() : p.getY() + 1));
+            actions.put('D', p -> p.setY(p.getY() == 1 ? p.getY() : p.getY() - 1));
+            actions.put('L', p -> p.setX(p.getX() == 1 ? p.getX() : p.getX() - 1));
+            actions.put('R', p -> p.setX(p.getX() == maxDistance ? p.getX() : p.getX() + 1));
+        }
+
+        public void updatePosition(char c, Coordinate position) {
+            actions.get(c).accept(position);
+        }
+    }
 
     PackMan(int x, int y, int n) {
         super(x, y);
         maxDistance = n;
+        positionUpdater = new PositionUpdater(n);
     }
 
     @Override
@@ -67,20 +88,7 @@ class PackMan extends GameEntity {
         }
 
         char c = path.remove(0);
-        switch (c) {
-            case 'U':
-                position.setY(position.getY() == maxDistance ? position.getY() : position.getY() + 1);
-                break;
-            case 'D':
-                position.setY(position.getY() == 1 ? position.getY() : position.getY() - 1);
-                break;
-            case 'L':
-                position.setX(position.getX() == 1 ? position.getX() : position.getX() - 1);
-                break;
-            case 'R':
-                position.setX(position.getX() == maxDistance ? position.getX() : position.getX() + 1);
-                break;
-        }
+        positionUpdater.updatePosition(c, position);
     }
 
     public void addPath(char c) {
@@ -232,20 +240,18 @@ class GReader implements GameReader {
 
         int packManPathCount = scan.nextInt();
         game.setMoveCount(packManPathCount);
-        for (int i = 0; i < packManPathCount; i++) {
-            char c = scan.next().charAt(0);
-            checkPath(c);
-            game.getPackMan().addPath(c);
-        }
+        IntStream.range(0, packManPathCount).forEach(i -> {
+            game.getPackMan().addPath(scan.next().charAt(0));
+        });
     }
 
     private void readGhosts(Scanner scan, GameBoard game, GhostFactory factory) throws Exception {
             int count = scan.nextInt();
-            for (int i = 0; i < count; i++) {
+            IntStream.range(0, count).forEach(i -> {
                 int x = scan.nextInt();
                 int y = scan.nextInt();
                 game.getGhosts().add(factory.createGhost(x, y, game.getBoardSize()));
-            }
+            });
     }
 
     private void checkPath(char c) throws Exception {
