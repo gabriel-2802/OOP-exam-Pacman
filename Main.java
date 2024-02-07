@@ -106,8 +106,9 @@ enum GhostColor {
     BLUE, RED
 }
 
-abstract class Ghost extends GameEntity {
-    protected int movement;
+abstract class Ghost extends GameEntity implements Comparable<Ghost> {
+
+protected int movement;
     protected int maxDistance;
 
     public Ghost(int x, int y) {
@@ -118,6 +119,16 @@ abstract class Ghost extends GameEntity {
     public abstract void move();
     public abstract void updateDirection();
     public abstract GhostColor getColor();
+    @Override
+    public int compareTo(Ghost g) {
+        if (this.position.getX() == g.position.getX()) {
+            if (this.position.getY() == g.position.getY()) {
+                return this.getColor().compareTo(g.getColor());
+            }
+            return this.position.getY() - g.position.getY();
+        }
+        return this.position.getX() - g.position.getX();
+    }
 
 }
 
@@ -156,7 +167,6 @@ class RedGhost extends Ghost {
     public String toString() {
         return "R " + position.getX() + " " + position.getY();
     }
-
 
 }
 
@@ -269,15 +279,7 @@ class GPrinter implements GamePrinter {
     @Override
     public void printGame(GameBoard game) {
         System.out.println(game.getPackMan());
-        game.getGhosts().stream().sorted((g1, g2) -> {
-            if (g1.getPosition().getX() == g2.getPosition().getX()) {
-                if (g1.getPosition().getY() == g2.getPosition().getY()) {
-                    return g1.getColor().compareTo(g2.getColor());
-                }
-                return g1.getPosition().getY() - g2.getPosition().getY();
-            }
-            return g1.getPosition().getX() - g2.getPosition().getX();
-        }).forEach(System.out::println);
+        game.getGhosts().stream().sorted().forEach(System.out::println);
     }
 }
 
